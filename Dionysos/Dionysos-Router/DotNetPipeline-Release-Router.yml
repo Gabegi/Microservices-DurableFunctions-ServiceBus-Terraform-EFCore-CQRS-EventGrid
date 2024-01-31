@@ -1,0 +1,32 @@
+  jobs:  
+  - job: 'Release'
+    displayName: 'Release dotnet Code'
+
+    pool:
+      vmImage: 'windows-latest'
+
+    steps:
+
+    #waiting til the function app is up and running, otherwise if not up the release will fail
+    - task: PowerShell@2
+      displayName: 'Wait for 5 minutes'
+      inputs:
+        targetType: 'inline'
+        script: |
+          Start-Sleep -Seconds 300
+
+    - task: DownloadBuildArtifacts@0
+      displayName: 'Download Build Artifacts'
+      inputs:
+        buildType: 'current' # current,' meaning it will download artifacts from the current build.
+        downloadType: 'single' # In this case, it's set to 'single,' which means it will download a single set of artifacts
+        artifactName: 'DionysosRouter'
+        downloadPath: '$(System.ArtifactsDirectory)' # This parameter indicates the directory where the downloaded artifacts will be stored
+
+    - task: AzureFunctionApp@1
+      inputs:
+        azureSubscription: $(ServiceConnectionName) # actually the service connection name
+        appType: functionApp # for windows function app
+        appName: $(routingAppName)${{ parameters.env }}
+        package: $(System.ArtifactsDirectory)/DionysosRouter/Dionysos-Router.zip
+        deploymentMethod: 'zipDeploy' # Zip deployment involves packaging the application code and dependencies into a ZIP file and deploying it to the Azure Functions app.

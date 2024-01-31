@@ -1,0 +1,19 @@
+parameters:
+  env: ''
+
+jobs: 
+  - job: fetch_keyvault_secrets_${{parameters.env}}
+    displayName: 'Fetching keyvault secrets for ${{parameters.env}}'
+    pool:
+      vmImage: windows-latest   
+
+    steps:
+    - task: AzureKeyVault@2
+      inputs:
+        ConnectedServiceName: $(ServiceConnectionName)
+        KeyVaultName: 'dionysos-kv-${{parameters.env}}'
+        SecretsFilter: 'dionysos-storageaccount-accesskey-${{parameters.env}}'
+
+      # $env: ARM_ACCESS_KEY= $SecretsFilter
+
+

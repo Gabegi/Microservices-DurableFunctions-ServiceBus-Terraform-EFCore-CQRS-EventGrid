@@ -1,0 +1,185 @@
+name: $(BuildDefinitionName)$(SourceBranchName)$(date:yyyyMMdd)$(rev:.r)
+
+schedules: 
+  - cron: "0 06 * * 1-5" #time zone for cron schedules is UTC
+    displayName: Weekday build 6am UTC
+    branches: 
+      include: 
+      - development
+      - main
+    always: true
+
+trigger:
+  branches:
+    include:
+    - master
+    - development
+
+variables: 
+
+# group variables
+- group: Dionysos-Variables
+
+# Azure variables
+- name: ServiceConnectionName
+  value: 'DionysosAzureServiceConnection'
+- name: azureSubscription
+  value: 'Visual Studio Enterprise Subscription � MPN'
+  
+ # Terraform backend variables
+- name:  bk-rg-name
+  value: 'rg-dionysos-tfstate'
+- name:  bk-str-account-name
+  value: 'dionysos00tfstate00'
+- name:   bk-container-name
+  value: 'tfstate'
+- name:   bk-key
+  value: 'terraform.tfstate'
+  
+ # dotnet variables
+- name:  routingAppName
+  value: 'dionysos-functionapp-routing-'
+- name:  computeAppName
+  value: 'dionysos-functionapp-compute-'
+
+pool:
+  vmImage: ubuntu-latest # This is the default if you don't specify a pool or vmImage.
+
+stages:
+
+   ##################### Infrastructure Pipeline ##################################
+  - stage: validate_terraform
+    displayName: 'Validate Terraform'
+
+    jobs:
+    - template: Terraform/plan.yml
+      parameters:
+       env: dev
+    - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master')}}: #if branch is master then execute
+      - template: Terraform/plan.yml
+        parameters:
+         env: prd
+
+  - stage: deploy_terraform
+    displayName: 'Deploy Terraform'
+    dependsOn:
+    - validate_terraform # makes sure validate_terraform stage runs first
+    condition: succeeded('validate_terraform') ## stage runs only if validate_terraform is successful
+
+    jobs:
+    - template: Terraform/deploy.yml
+      parameters:
+       env: dev
+    - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master')}}: #if branch is master then execute
+      - template: Terraform/deploy.yml
+        parameters:
+         env: prd
+
+
+     ##################### SQL Database Build DACPAC ##################################
+
+  - stage: sql_build_dacpac
+    displayName: 'Build DACPAC SQL DB'
+    dependsOn:
+    - deploy_terraform
+    condition: succeeded('deploy_terraform') 
+
+    jobs:
+    - template: Database/create-database-dacpacfile.yml
+      parameters:
+        env: dev
+    - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master')}}: 
+      - template: Database/create-database-dacpacfile.yml
+        parameters:
+          env: prd
+
+     ##################### SQL Publish DACPAC ##################################
+
+  - stage: sql_publish_dacpac
+    displayName: 'Publish DACPAC SQL DB'
+    dependsOn:
+    - sql_build_dacpac
+    condition: succeeded('sql_build_dacpac') 
+
+    jobs:
+    - template: Database/create-database-fromdacpacfile.yml
+      parameters:
+        env: dev
+    - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master')}}: 
+      - template: Database/create-database-fromdacpacfile.yml
+        parameters:
+          env: prd
+
+          ##################### DotNet Build Pipeline: Router Function App ##################################
+
+  - stage: dotnet_build_router
+    displayName: 'DotNet Build Router FunctionApp'
+    dependsOn:
+    - deploy_terraform
+    condition: succeeded('deploy_terraform') 
+
+    jobs:
+    - template: Dionysos/Dionysos-Router/DotNetPipeline-Build-Router.yml
+      parameters:
+        env: dev
+    - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master')}}: 
+      - template: Dionysos/Dionysos-Router/DotNetPipeline-Build-Router.yml
+        parameters:
+          env: prd
+
+    ##################### DotNet Release Pipeline: Router Function App ##################################
+   
+  - stage: dotnet_release_router
+    displayName: 'DotNet Release Router FunctionApp'
+    dependsOn:
+    - dotnet_build_router
+    condition: succeeded('dotnet_build_router') 
+
+    jobs:
+    - template: Dionysos/Dionysos-Router/DotNetPipeline-Release-Router.yml
+      parameters:
+        env: dev
+    - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master')}}: 
+      - template: Dionysos/Dionysos-Router/DotNetPipeline-Release-Router.yml
+        parameters:
+          env: prd
+
+
+    #################### DotNet Build Pipeline: App Function App ##################################
+
+  - stage: dotnet_build_app
+    displayName: 'DotNet Build Compute FunctionApp'
+    dependsOn:
+    - deploy_terraform
+    condition: succeeded('deploy_terraform') 
+
+    jobs:
+    - template: Dionysos/DionysosApp/DotNetPipeline-Build-App.yml
+      parameters:
+        env: dev
+    - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master')}}: 
+      - template: Dionysos/DionysosApp/DotNetPipeline-Build-App.yml
+        parameters:
+          env: prd
+
+     ##################### DotNet Release Pipeline: App Function App ##################################
+   
+  - stage: dotnet_release_app
+    displayName: 'DotNet Release Compute FunctionApp'
+    dependsOn:
+    - dotnet_build_app
+    condition: succeeded('dotnet_build_app') 
+
+    jobs:
+    - template: Dionysos/DionysosApp/DotNetPipeline-Release-App.yml
+      parameters:
+        env: dev
+    - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master')}}: 
+      - template: Dionysos/DionysosApp/DotNetPipeline-Release-App.yml
+        parameters:
+          env: prd
+
+
+
+
+

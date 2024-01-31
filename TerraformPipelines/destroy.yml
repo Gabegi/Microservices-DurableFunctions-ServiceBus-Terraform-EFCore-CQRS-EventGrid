@@ -1,0 +1,49 @@
+parameters:
+  env: ''
+
+jobs:
+- deployment: destroy_infrastructure_${{ parameters.env }}
+  displayName: 'Destroy infrastructure for ${{ parameters.env }}'
+  pool:
+    vmImage: 'windows-latest'
+  environment: 'deploy_infrastructure_${{ parameters.env }}' # Pipeline Environment (ADO), benefit??
+      # First, you need to make sure you are Creator in the Security of environment:
+      # Job deploy_infrastructure_dev: Environment dev could not be found. => needs to be first created
+      # The environment does not exist or has not been authorized for use.
+
+  strategy:
+    runOnce: ## RunOnce vs Canary Deployment
+      deploy:
+        steps:
+          - checkout: none #or self (clone repo in current job?)
+          - download: current # get latest artifact?
+            artifact: 'output-${{ parameters.env }}' #fetch the output file from the plan phase
+
+          - task: TerraformInstaller@1 # 1st/ install terraform
+            displayName: 'Install Terraform' # install always need to be installed at every stage
+            inputs:
+              terraformVersion: 'latest'
+
+          - task: TerraformTaskV4@4
+            inputs:
+              provider: 'azurerm'
+              command: 'destroy'
+              workingDirectory: '$(Pipeline.Workspace)/output-${{ parameters.env }}/Infrastructure'
+              environmentServiceNameAzureRM: $(ServiceConnectionName)
+              commandOptions: '-lock=true -var-file="vars/${{parameters.env}}.tfvars"'
+
+
+
+# jobs:
+#   - job: ${{parameters.env}}_destroy_tf
+#     displayName: 'Destroy ${{parameters.env}} terraform'
+#     pool:
+#       vmImage: 'windows-latest'
+
+#     steps:
+#     - task: TerraformInstaller@1 # 1st/ install terraform
+#       displayName: 'Install Terraform' # install always need to be installed at every stage
+#       inputs:
+#         terraformVersion: 'latest'
+
+              

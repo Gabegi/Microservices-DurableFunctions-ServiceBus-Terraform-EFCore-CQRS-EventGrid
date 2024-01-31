@@ -1,0 +1,49 @@
+parameters:
+  env: ''
+
+jobs:
+  - job: ${{parameters.env}}_sql_dac_deployment
+    displayName: 'Create Database with DAC file'
+    pool:
+      vmImage: windows-latest
+
+    steps:
+
+    - task: AzurePowerShell@5
+      displayName: 'Add build agent public ip'
+      inputs:
+        azureSubscription: $(ServiceConnectionName)
+        ScriptType: InlineScript
+        Inline: |
+         $ip = (Invoke-WebRequest -uri "http://ifconfig.me/ip").Content
+         $guid = [System.Guid]::NewGuid().ToString() # adding a guid so this step doesnt fail even if rule already exists
+         New-AzSqlServerFirewallRule -ResourceGroupName "dionysos-rg-${{parameters.env}}"  -ServerName "dionysos-sqlserver-${{parameters.env}}" -FirewallRuleName "azuredevops-$guid" -StartIpAddress $ip -EndIpAddress $ip
+        azurePowerShellVersion: LatestVersion
+
+
+    # - task: AzureCLI@2
+    #   displayName: 'Add SP as SQL Admin'
+    #   inputs:
+    #       azureSubscription: $(ServiceConnectionName)
+    #       scriptType: ps
+    #       scriptLocation: inlineScript
+
+    #       inlineScript: |
+    #         sqlcmd -S "dionysos-sqlserver-${{parameters.env}}.database.windows.net" -d "dionysos-database-${{parameters.env}}" -U $(db-server-login)  -P $(db-server-pw) -i "$(Build.SourcesDirectory)/Database/sp_admin_setup.sql"
+
+          
+
+           #'Create SQL Admins AD group' > not enough rights
+           #  az ad group create --display-name dionysos-sqlserver-${{parameters.env}}-Admins --mail-nickname dionysos-sqlserver-${{parameters.env}}-Admins
+            #loginName = $(db-server-login) 
+            #$password = $(db-server-pw)
+
+
+    - task: SqlAzureDacpacDeployment@1
+      displayName: 'Populate DB with DACPAC'
+      inputs:
+        azureSubscription: $(ServiceConnectionName)
+        AuthenticationType: 'servicePrincipal'
+        ServerName: 'dionysos-sqlserver-${{parameters.env}}.database.windows.net'
+        DatabaseName: 'dionysos-database-${{parameters.env}}'
+        DacpacFile: '$(Build.SourcesDirectory)/Database/CustomerDatabase.dacpac'

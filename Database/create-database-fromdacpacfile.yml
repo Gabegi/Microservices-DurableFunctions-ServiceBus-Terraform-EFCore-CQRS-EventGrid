@@ -1,0 +1,45 @@
+parameters:
+  env: ''
+
+jobs:
+  - job: ${{parameters.env}}_publish_sqldatabase_dacpac
+    displayName: 'Publish SQL Database file'
+    pool:
+      vmImage: windows-latest
+
+    steps:
+
+    # add agent ip to sql server
+    - task: AzurePowerShell@5
+      displayName: 'Add build agent public ip to sql-server to authenticate'
+      inputs:
+        azureSubscription: $(ServiceConnectionName)
+        ScriptType: InlineScript
+        Inline: |
+         $ip = (Invoke-WebRequest -uri "http://ifconfig.me/ip").Content
+         $guid = [System.Guid]::NewGuid().ToString() # adding a guid so this step doesnt fail even if rule already exists
+         New-AzSqlServerFirewallRule -ResourceGroupName "dionysos-rg-${{parameters.env}}"  -ServerName "dionysos-sqlserver-${{parameters.env}}" -FirewallRuleName "azuredevops-$guid" -StartIpAddress $ip -EndIpAddress $ip
+        azurePowerShellVersion: LatestVersion
+
+    # download file
+    - task: DownloadPipelineArtifact@2
+      displayName: 'download file'
+      inputs:
+        artifactName: 'sqldb-databasemigration'
+        downloadPath: '$(System.ArtifactsDirectory)/sqldb-databasemigration'
+
+    # deploy db with file
+    - task: SqlAzureDacpacDeployment@1
+      displayName: run sql migrations
+      inputs:
+          azureConnectionType: connectedServiceNameARM
+          azureSubscription: $(ServiceConnectionName) # Service Connection
+
+          ServerName: 'dionysos-sqlserver-${{parameters.env}}.database.windows.net' # Required when auth = SP, server
+          DatabaseName: 'dionysos-database-${{parameters.env}}' # Required when auth = SP, server
+
+          deployType: sqlTask
+          sqlFile: $(System.ArtifactsDirectory)/sqldb-databasemigration/DataBaseContext.sql
+          
+          authenticationType: connectionString  
+          connectionString: $(dbConnectionString) # insert variable from ADO Library variables

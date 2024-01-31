@@ -1,0 +1,51 @@
+name: $(BuildDefinitionName)$(SourceBranchName)$(date:yyyyMMdd)$(rev:.r)
+
+
+schedules: 
+  - cron: "0 17 * * *" #time zone for cron schedules is UTC
+    displayName: Daily destroy
+    branches: 
+      include: 
+      - development
+      - main
+    always: true
+
+trigger: none
+
+variables: # terraform variables
+ ServiceConnectionName: 'DionysosAzureServiceConnection'
+ bk-rg-name: 'rg-dionysos-tfstate'
+ bk-str-account-name: 'dionysos00tfstate00'
+ bk-container-name: 'tfstate'
+ bk-key: 'terraform.tfstate' # key is actually name of the file, determined here
+
+pool:
+  vmImage: ubuntu-latest # This is the default if you don't specify a pool or vmImage.
+
+stages:
+
+  - stage: validate_terraform
+    displayName: 'Validate Terraform'
+
+    jobs:
+    - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/development')}}: #if branch is development then execute
+      - template: Terraform/plan.yml
+        parameters:
+          env: dev
+    - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master')}}: #if branch is master then execute
+      - template: Terraform/plan.yml
+        parameters:
+          env: prd
+
+  - stage: destroy_terraform
+    displayName: 'Destroy Terraform'
+
+    jobs:
+    - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/development')}}: #if branch is development then execute
+      - template: Terraform/destroy.yml
+        parameters:
+          env: dev
+    - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/master')}}: #if branch is master then execute
+      - template: Terraform/destroy.yml
+        parameters:
+          env: prd

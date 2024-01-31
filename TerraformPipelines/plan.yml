@@ -1,0 +1,65 @@
+parameters:
+  env: ''
+
+jobs:
+  - job: ${{parameters.env}}_validate_tf
+    displayName: 'Validate ${{parameters.env}} terraform scripts'
+    pool:
+      vmImage: windows-latest
+
+    steps:
+    - task: TerraformInstaller@1 # 1st/ install terraform
+      displayName: 'Install Terraform' # install always need to be installed at every stage
+      inputs:
+        terraformVersion: 'latest'
+
+    - task: TerraformTaskV4@4
+      displayName: 'Initialise Terraform' # init needs to be installed at every stage
+      inputs:
+        provider: 'azurerm'
+        command: init
+        workingDirectory: '$(System.DefaultWorkingDirectory)/Infrastructure' # where the Terraform code is at
+        # fetched from variables (azure-pipeline.yml)
+        backendServiceArm: $(ServiceConnectionName)
+        backendAzureRmResourceGroupName: '$(bk-rg-name)-${{parameters.env}}'  
+        backendAzureRmStorageAccountName: '$(bk-str-account-name)${{parameters.env}}'  
+        backendAzureRmContainerName: '$(bk-container-name)-${{parameters.env}}'  
+        backendAzureRmKey: '${{parameters.env}}$(bk-key)'  
+
+    - task: TerraformTaskV4@4
+      displayName: 'Validate Terraform'
+      inputs:
+        provider: 'azurerm'
+        command: 'validate'   
+
+    - task: TerraformTaskV4@4
+      displayName: 'Plan Terraform'
+      inputs:
+        provider: 'azurerm'
+        command: 'plan'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/Infrastructure'
+        environmentServiceNameAzureRM: $(ServiceConnectionName)
+        commandOptions: '-lock=false -var-file="vars/${{parameters.env}}.tfvars" -out=$(System.DefaultWorkingDirectory)/Infrastructure/terraform.tfplan'
+        # lock = false, so the agent running this tage doesn't lock the state?
+        # TO DO: change to true
+        # var file = selecting the tfvars for each environment
+        # out = creating the plan file to the Infrastructure folder and call it terraform.tfplan
+
+        # Automated Pipelines: In the context of automated build or deployment pipelines, where you have a single process running at a time, 
+        # you might disable the lock to simplify the automation process.
+
+    - task: CopyFiles@2
+      displayName: 'Moving Terraform Code to artifact staging'
+      inputs:
+        Contents: 'Infrastructure/**'
+        TargetFolder: '$(build.ArtifactStagingDirectory)'
+        # Plan and apply are most likely on different machines
+        # plan state should thus be saved on a file
+        # it will be then be loaded by apply
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Making artifact available to apply stage'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'output-${{parameters.env}}'
+        publishLocation: 'Container'
