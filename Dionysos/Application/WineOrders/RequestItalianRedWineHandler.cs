@@ -4,7 +4,7 @@ using Infrastructure.DataBase.Tables;
 using MediatR;
 using Messages;
 
-namespace Domain.WineOrders
+namespace Application.WineOrders
 {
     public class RequestItalianRedWineHandler : IRequestHandler<RequestItalianRedWine>
     {

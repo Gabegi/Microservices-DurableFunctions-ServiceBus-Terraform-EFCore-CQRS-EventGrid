@@ -3,7 +3,7 @@ using DTO;
 using Infrastructure.DataBase.Tables;
 using Messages;
 
-namespace Domain.Mapping
+namespace Application.Mapping
 {
     public class MappingProfile: Profile
     {

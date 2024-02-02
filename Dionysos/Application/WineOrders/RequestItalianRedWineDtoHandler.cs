@@ -8,7 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System.Text;
 
-namespace Domain.WineOrders
+namespace Application.WineOrders
 {
     public class RequestItalianRedWineDtoHandler : IRequestHandler<RequestItalianRedWineDto>
     {

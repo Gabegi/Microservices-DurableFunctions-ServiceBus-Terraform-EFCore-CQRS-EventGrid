@@ -4,7 +4,4 @@
     {
         public string? serviceBusConnectionString { get; set; }
     }
-
-
-
 }

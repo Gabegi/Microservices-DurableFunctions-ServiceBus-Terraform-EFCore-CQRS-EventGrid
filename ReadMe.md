@@ -7,17 +7,12 @@ Welcome To Dionysos, the online wine shop! Dionysos provides some of the best wi
 The application serves to go through the SDL (software-development-lifecycle) and provide some technical information on technical choices.
 <br>
 
-
-
 ## To do list
 
-- Deploy complete infra in dev
-- Write draft ADO Blog
-- Validate Blog
-- Push Code to GitHub
-- networking
+- Add fluent validation
+- Deploy infra
 
-## Potential project development
+Others:
 - Automatically scale app
 - URL-based routing to more trigger FunctionApp
 - Network security groups
