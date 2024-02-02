@@ -7,7 +7,7 @@ Welcome To Dionysos, the online wine shop! Dionysos provides some of the best wi
 The application serves to go through the SDL (software-development-lifecycle) and provide some technical information on technical choices.
 <br>
 
-# Test
+
 
 ## To do list
 
