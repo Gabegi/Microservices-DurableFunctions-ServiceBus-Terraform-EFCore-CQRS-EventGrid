@@ -36,11 +36,11 @@ Here is a full documentation resulting from this project:
 ## Terraform Pipeline
 
 
-![InfrasTerraformPipelinetructure](TerraformPipeline.png)
+![InfrasTerraformPipelinetructure](terraformpipeline.png)
 
 ## Layers
 
-![Layers](Layers.png)
+![Layers](layers.png)
 
 
 ## Requirements
