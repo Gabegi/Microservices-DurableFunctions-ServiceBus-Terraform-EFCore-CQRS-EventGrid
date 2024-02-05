@@ -1,14 +1,14 @@
-﻿using AutoMapper;
+﻿using Application.Messages;
+using AutoMapper;
 using Azure.Messaging.ServiceBus;
 using DTO;
 using Infrastructure.AzureServiceBusClient;
 using MediatR;
-using Messages;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System.Text;
 
-namespace Application.WineOrders
+namespace Application.Handlers
 {
     public class RequestItalianRedWineDtoHandler : IRequestHandler<RequestItalianRedWineDto>
     {
@@ -29,7 +29,7 @@ namespace Application.WineOrders
 
         public async Task Handle(RequestItalianRedWineDto requestDto, CancellationToken cancellationToken)
         {
-            
+
             var request = _mapper.Map<RequestItalianRedWine>(requestDto);
 
             var messageBody = JsonConvert.SerializeObject(request);
@@ -44,5 +44,5 @@ namespace Application.WineOrders
         }
     }
 
-    
+
 }

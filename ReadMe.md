@@ -13,6 +13,8 @@ The application serves to go through the SDL (software-development-lifecycle) an
 - Deploy infra
 
 Others:
+- Serilog
+- Fluent validation
 - Automatically scale app
 - URL-based routing to more trigger FunctionApp
 - Network security groups

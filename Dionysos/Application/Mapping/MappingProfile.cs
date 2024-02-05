@@ -1,7 +1,7 @@
-﻿using AutoMapper;
+﻿using Application.Messages;
+using AutoMapper;
 using DTO;
 using Infrastructure.DataBase.Tables;
-using Messages;
 
 namespace Application.Mapping
 {

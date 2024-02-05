@@ -1,6 +1,6 @@
 ﻿using MediatR;
 
-namespace Messages
+namespace Application.Messages
 {
     [Serializable]
     public class Wine: IRequest
