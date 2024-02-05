@@ -26,7 +26,7 @@ Here is a full documentation resulting from this project:
 
 ## Flow
 
-![Flow](Flow.png)
+![Flow](flow.png)
 
 
 ## Infrastructure
