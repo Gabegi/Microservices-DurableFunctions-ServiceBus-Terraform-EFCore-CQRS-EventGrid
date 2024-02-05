@@ -4,8 +4,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.IO;
 using Microsoft.EntityFrameworkCore;
-using Domain.WineOrders;
-using Domain.Mapping;
+using Application.Handlers;
+using Application.Mapping;
+
 
 [assembly: FunctionsStartup(typeof(DionysosApp.Startup))] //specify the class that acts as the Functions startup
 

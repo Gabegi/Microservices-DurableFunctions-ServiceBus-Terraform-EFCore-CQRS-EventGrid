@@ -1,6 +1,6 @@
-﻿using Common;
-using Domain.Mapping;
-using Domain.WineOrders;
+﻿using Application.Handlers;
+using Application.Mapping;
+using Common;
 using Infrastructure.AzureServiceBusClient;
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;

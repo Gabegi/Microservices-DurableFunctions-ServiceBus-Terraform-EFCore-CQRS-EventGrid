@@ -1,5 +1,5 @@
 ﻿
-namespace Messages
+namespace Application.Messages
 {
     [Serializable]
     public class RequestItalianRedWine : Wine

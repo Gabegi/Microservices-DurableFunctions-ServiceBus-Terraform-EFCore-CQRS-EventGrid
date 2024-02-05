@@ -1,10 +1,10 @@
-﻿using AutoMapper;
+﻿using Application.Messages;
+using AutoMapper;
 using Infrastructure.DataBase;
 using Infrastructure.DataBase.Tables;
 using MediatR;
-using Messages;
 
-namespace Domain.WineOrders
+namespace Application.Handlers
 {
     public class RequestItalianRedWineHandler : IRequestHandler<RequestItalianRedWine>
     {

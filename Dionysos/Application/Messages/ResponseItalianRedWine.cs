@@ -1,6 +1,4 @@
-﻿using Messages;
-
-namespace Common.Messages
+﻿namespace Application.Messages
 {
     public class ResponseItalianRedWine : Wine
     {
