@@ -4,25 +4,44 @@
 Welcome To Dionysos, the online wine shop! Dionysos provides some of the best wines the world has to offer. Order fast, our items all have limited availability!
 
 ## Goal
-The application serves to go through the SDL (software-development-lifecycle) and provide some technical information on technical choices.
+The application will handle wine orders and update the stock accordingly. It will also update the business report and contact the customer when the product is shipped. The app will also handle customer orders at any time.
 <br>
 
-## To do list
+## Blogs
+Here is a full documentation resulting from this project:
 
-- Add fluent validation
-- Deploy infra
+- [Deploying Azure Infrastructure in Terraform through a YAML Azure DevOps Pipeline](https://medium.com/@codebob75/terraform-in-azure-devops-pipeline-9a7e7dce2c05) 
 
-Others:
-- Serilog
-- Fluent validation
-- Automatically scale app
-- URL-based routing to more trigger FunctionApp
-- Network security groups
-- Networking
-- LogicApp + design of logicApp in ARM
-- CORS [Cross-origin resource sharing](https://learn.microsoft.com/en-us/azure/azure-functions/functions-how-to-use-azure-function-app-settings?tabs=portal#use-application-settings) 
-- Containers/ K8s
-- Using MongoDB [MongoDB EF](https://devblogs.microsoft.com/dotnet/efcore-mongodb/?ocid=dotnet_eml_tnp_autoid38_image) 
+- [Deploying .Net Code to a Function App using YAML files in Azure DevOps](https://medium.com/@codebob75/deploying-a-net-function-app-using-yaml-files-in-azure-devops-ec0b6c1e5484) 
+
+- [AutoMapper dependency injection .Net 6](https://medium.com/@codebob75/automapper-dependency-injection-net-6-58a5c5314038) 
+
+- [MediatR Dependency Injection .Net 6](https://medium.com/@codebob75/mediatr-dependency-injection-net-6-71c42ae7c0de) 
+
+- [Leveraging Azure Service Bus with .NET 6 Dependency Injection in Function Apps](https://medium.com/@codebob75/servicebus-in-net-6-dependency-injection-function-app-2c72b05c6b78) 
+
+## Functional Design
+
+![Functional Design](FunctionalDesign.png)
+
+## Flow
+
+![Flow](Flow.png)
+
+
+## Infrastructure
+
+![Infrastructure](Infrastructure.png)
+
+## Terraform Pipeline
+
+
+![InfrasTerraformPipelinetructure](TerraformPipeline.png)
+
+## Layers
+
+![Layers](Layers.png)
+
 
 ## Requirements
 [App requirements](https://www.altexsoft.com/blog/business/functional-and-non-functional-requirements-specification-and-types/) 
@@ -60,10 +79,7 @@ And its flow
 <br>
 
 
-## Project Extension
-This section covers how the solution can be extended
 
-- Only the function app code is in the repo ==> move all the infra into terraform code [Get Logic App Flow in Terraform](https://azapril.dev/2021/04/12/deploying-a-logicapp-with-terraform/)
 
 # Technical Part
 ## Project Planning
@@ -79,42 +95,6 @@ Logic apps offer several advantages for our use-case:
 
 <br>
 The storage queue will then handle the requests, this enables features such as retry and finding unprocessed requests so that all orders can be processed in case of issues with the app or infra.
-
-### Git strategy
-
-[Feature Branches strategy](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow)
-- Work is done on a feature branch, it is then pushed first to DEV for testing, then a PR is done and reviewed by another team member and upon approval pushed to PRD
-
-![GitStrategy](GitStrategy.png)
-
-
-[Branch policies and settings](https://learn.microsoft.com/en-us/azure/devops/repos/git/branch-policies?view=azure-devops&tabs=browser#limit-merge-types)
-
-Production Branch:
--  (preserves history) [No Fast-forward](https://devblogs.microsoft.com/devops/pull-requests-with-rebase/)
-- Build validation
-- [Branch cannot be deleted](https://learn.microsoft.com/en-us/azure/devops/repos/git/branch-permissions?view=azure-devops)
-- Check for comment resolution
-- [Minimum number of reviewers = 1](https://praveenkumarsreeram.com/2022/10/16/azure-devops-tips-and-tricks-12-how-to-restrict-direct-commits-to-a-branch-using-branch-policies/) ==> this will prevent anyone to directly push to master, only PRs can go to master
-
-Development Branch:
-- NFF
-- Build validation
-- Based on feature branch
-- Branch cannot be deleted
-
-Feature Branch:
-- Squash commit
-- Name should start with feature/ e.g. feature/documentation
-- Branch should be deleted once merged
-
-[Git Ignore file:](https://www.atlassian.com/git/tutorials/saving-changes/gitignore)
-
-- Use the standard .Net GitIgnore by typing: dotnet new gitignore
-
-- Destroy Branch: runs every day at 6pm CET
-
-[Configure schedules for pipelines](https://learn.microsoft.com/en-us/azure/devops/pipelines/process/scheduled-triggers?view=azure-devops&tabs=yaml)
 
 
 ### Terraform Pipeline
@@ -518,10 +498,6 @@ Plan pricing tiers => https://azure.microsoft.com/en-us/pricing/details/app-serv
 
 Resource group
 
-
-
-
-
 #### Data
 
 - Storage
@@ -544,10 +520,6 @@ Queues offer First In, First Out (FIFO) message delivery to one or more competin
 EventGrid
 
 - [What is Azure Event Grid?](https://learn.microsoft.com/en-us/azure/event-grid/overview)
-
-
-
-### Logic App Flow
 
 
 ## .Net Code
@@ -1378,12 +1350,70 @@ ServiceBusProcessor processor;
 - Deserialise body
 Customer customer = JsonConvert.DeserializeObject<Customer>(Encoding.UTF8.GetString(message.Body));
 
+
+## Project Extension
+This section covers how the solution can be extended
+
+- Only the function app code is in the repo ==> move all the infra into terraform code [Get Logic App Flow in Terraform](https://azapril.dev/2021/04/12/deploying-a-logicapp-with-terraform/)
+
 ## GitHub Repo
 
 https://github.com/Azure-Samples/saga-orchestration-serverless/tree/main
 
 
+## To do list
 
+- Add fluent validation
+- Deploy infra
+
+Others:
+- Serilog
+- Fluent validation
+- Automatically scale app
+- URL-based routing to more trigger FunctionApp
+- Network security groups
+- Networking
+- LogicApp + design of logicApp in ARM
+- CORS [Cross-origin resource sharing](https://learn.microsoft.com/en-us/azure/azure-functions/functions-how-to-use-azure-function-app-settings?tabs=portal#use-application-settings) 
+- Containers/ K8s
+- Using MongoDB [MongoDB EF](https://devblogs.microsoft.com/dotnet/efcore-mongodb/?ocid=dotnet_eml_tnp_autoid38_image) 
+
+
+### Git strategy (implemented in ADO)
+
+[Feature Branches strategy](https://www.atlassian.com/git/tutorials/comparing-workflows/gitflow-workflow)
+- Work is done on a feature branch, it is then pushed first to DEV for testing, then a PR is done and reviewed by another team member and upon approval pushed to PRD
+
+![GitStrategy](GitStrategy.png)
+
+
+[Branch policies and settings](https://learn.microsoft.com/en-us/azure/devops/repos/git/branch-policies?view=azure-devops&tabs=browser#limit-merge-types)
+
+Production Branch:
+-  (preserves history) [No Fast-forward](https://devblogs.microsoft.com/devops/pull-requests-with-rebase/)
+- Build validation
+- [Branch cannot be deleted](https://learn.microsoft.com/en-us/azure/devops/repos/git/branch-permissions?view=azure-devops)
+- Check for comment resolution
+- [Minimum number of reviewers = 1](https://praveenkumarsreeram.com/2022/10/16/azure-devops-tips-and-tricks-12-how-to-restrict-direct-commits-to-a-branch-using-branch-policies/) ==> this will prevent anyone to directly push to master, only PRs can go to master
+
+Development Branch:
+- NFF
+- Build validation
+- Based on feature branch
+- Branch cannot be deleted
+
+Feature Branch:
+- Squash commit
+- Name should start with feature/ e.g. feature/documentation
+- Branch should be deleted once merged
+
+[Git Ignore file:](https://www.atlassian.com/git/tutorials/saving-changes/gitignore)
+
+- Use the standard .Net GitIgnore by typing: dotnet new gitignore
+
+- Destroy Branch: runs every day at 6pm CET
+
+[Configure schedules for pipelines](https://learn.microsoft.com/en-us/azure/devops/pipelines/process/scheduled-triggers?view=azure-devops&tabs=yaml)
 
 
 
